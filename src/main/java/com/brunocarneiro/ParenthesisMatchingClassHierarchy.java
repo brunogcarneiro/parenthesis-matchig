@@ -10,7 +10,8 @@ public class ParenthesisMatchingClassHierarchy {
     public Boolean check(String sample) {
         Stream<Character> characterStream = sample
                                              .chars()
-                                              .mapToObj(c -> (char) c);
+                                              .mapToObj(c -> (char) c)
+                                              .filter(ch -> "(){}[]".indexOf(ch) >= 0);
         
         try {
             characterStream
@@ -31,7 +32,7 @@ public class ParenthesisMatchingClassHierarchy {
     }
     
     private void processCharacter(Character c) throws InvalidCharacterException, NotBalancedException {
-        CharInput b = new BracketFactory().parse(c);
+        Bracket b = new BracketFactory().parse(c);
         
         if (b instanceof OpenningBracket) {
             stack.push((OpenningBracket) b);
@@ -49,51 +50,58 @@ public class ParenthesisMatchingClassHierarchy {
     private void pop(ClosingBracket currentBracket){
         OpenningBracket stackBracket = stack.pop();
         
-        if ( ! matchBracketTypes(stackBracket, currentBracket) ) {
+        if ( ! stackBracket.matchClosing(currentBracket) ) {
             throw new NotBalancedException(); 
         }
     }
     
-    private boolean matchBracketTypes(OpenningBracket stackBracket, ClosingBracket currentBracket){
-        return (stackBracket instanceof CurlyOpenning ) ? currentBracket instanceof CurlyClosing :
-               (stackBracket instanceof BoxOpenning   ) ? currentBracket instanceof BoxClosing   :
-               (stackBracket instanceof RoundOpenning ) ? currentBracket instanceof RoundClosing 
-                                                        : false;
-    }
-    
     private class BracketFactory {
-        public CharInput parse(Character c) throws InvalidCharacterException {
-            CharInput ci = null;
+        public Bracket parse(Character c) throws InvalidCharacterException {
+        	Bracket bracket = null;
             switch (c) {
-                case '{': ci = new CurlyOpenning(); break;
-                case '[': ci = new BoxOpenning();   break;
-                case '(': ci = new RoundOpenning(); break;
+                case '{': bracket = new CurlyOpenning(); break;
+                case '[': bracket = new BoxOpenning();   break;
+                case '(': bracket = new RoundOpenning(); break;
                 
-                case '}': ci = new CurlyClosing(); break;
-                case ']': ci = new BoxClosing();   break;
-                case ')': ci = new RoundClosing(); break;
+                case '}': bracket = new CurlyClosing(); break;
+                case ']': bracket = new BoxClosing();   break;
+                case ')': bracket = new RoundClosing(); break;
                 
                 default:
-                    ci = new NonBracket(); 
+                    throw new InvalidCharacterException(); 
             }
             
-            return ci;
+            return bracket;
         }
     }
     
     /**
      * Related types
      */
-    private abstract class CharInput {}
+    private abstract class Bracket {}
     
-    private class NonBracket extends CharInput {}
+    private abstract class OpenningBracket extends Bracket {
+    	public abstract boolean matchClosing(ClosingBracket cb);
+    }
     
-    private abstract class Bracket extends CharInput {}
-    
-    private abstract class OpenningBracket extends Bracket {}
-    private class CurlyOpenning extends OpenningBracket{}
-    private class BoxOpenning extends OpenningBracket{}
-    private class RoundOpenning extends OpenningBracket{}
+    private class CurlyOpenning extends OpenningBracket{
+    	@Override
+    	public boolean matchClosing(ClosingBracket cb) {
+    		return cb instanceof CurlyClosing;
+    	}
+    }
+    private class BoxOpenning extends OpenningBracket{
+    	@Override
+    	public boolean matchClosing(ClosingBracket cb) {
+    		return cb instanceof BoxClosing;
+    	}
+    }
+    private class RoundOpenning extends OpenningBracket{
+    	@Override
+    	public boolean matchClosing(ClosingBracket cb) {
+    		return cb instanceof RoundClosing;
+    	}
+    }
     
     private abstract class ClosingBracket extends Bracket {}
     private class CurlyClosing extends ClosingBracket{}
