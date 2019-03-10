@@ -1,41 +1,20 @@
 package com.brunocarneiro;
 
-import java.util.Arrays;
-import java.util.stream.Stream;
 import java.util.Stack;
+import java.util.stream.Stream;
 
-public class ParenthesisMatching {
-    
-    private static ParenthesisMatching pm = new ParenthesisMatching();
+public class ParenthesisMatchingClassHierarchy {
+
     Stack<OpenningBracket> stack = new Stack<>();
-
-    public static void main(String[] args) {
-        
-        String[] tests = {
-            "(a[0]+b[2c[6]]){24 + 53}",
-            "f(e(d))",
-            "[()]{}([])",
-            "((b)",
-            "(c]",
-            "{(a[]))}",
-            "([)]",
-            ")(",
-            "empty"
-        };
-        
-        Arrays.stream(tests)
-            .map(pm::check)
-            .forEach(System.out::println);
-    }
     
-    private Boolean check(String sample) {
+    public Boolean check(String sample) {
         Stream<Character> characterStream = sample
                                              .chars()
                                               .mapToObj(c -> (char) c);
         
         try {
             characterStream
-                .forEach ( pm::processCharacter );
+                .forEach ( this::processCharacter );
             
             if (stack.size() > 0) {
                 throw new NotBalancedException(); 
@@ -45,7 +24,10 @@ public class ParenthesisMatching {
         } catch (InvalidCharacterException | NotBalancedException e){
             //e.printStackTrace();
             return false;
-        }
+        } finally {
+        	stack.clear(); //reset stack for next check
+		}
+        
     }
     
     private void processCharacter(Character c) throws InvalidCharacterException, NotBalancedException {
